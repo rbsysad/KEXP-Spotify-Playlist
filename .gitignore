@@ -1,5 +1,6 @@
-playlist.json
-new_playlist.json
-results.txt
+data.txt
 venv
-test.json
+shadow.py
+uris.txt
+__pycache__
+temp.txt
