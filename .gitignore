@@ -4,5 +4,5 @@ __pycache__
 temp.txt
 success.txt
 main.bat
-playlist.json
-success.json
+./playlist.json
+./success.json
