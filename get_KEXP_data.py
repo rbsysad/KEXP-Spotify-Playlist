@@ -2,7 +2,6 @@
 
 import requests
 import json
-from remove_duplicates import RemoveDuplicates
 
 class GetKEXPData:
 

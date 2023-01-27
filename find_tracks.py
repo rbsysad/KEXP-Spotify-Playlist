@@ -87,3 +87,33 @@ class FindTracks:
                                                  "Authorization": f"Bearer {self.spotify_token}"})
 
         print(response.json(), "\n")
+
+
+import requests
+import json
+
+response = requests.get('https://api.kexp.org/v1/play/')
+
+response_json = (response.json())
+
+artist = ""
+track = ""
+playlist = []
+
+for item in response_json['results']:
+  if isinstance(item['artist'], dict):
+    if isinstance(item['track'], dict):
+      artist = (item['artist']['name'])
+      track = item['track']['name']
+      playlist.append({'artist': artist, 'track': track})
+
+# for item in playlist:
+#   print(item['artist'] + " " + item['track'])
+
+# query = f"https://api.spotify.com/v1/search?q={track} {artist}&limit=1&type=track&market=US"
+# response = requests.get(query, headers={"Content-Type": "application/json",
+#                                         "Authorization": f"Bearer {token}"})
+
+
+for item in playlist:
+  print(item['artist'] + " " + item['track'])
