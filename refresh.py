@@ -1,5 +1,5 @@
-from shadow import refresh_token, base_64
 import requests
+from shadow import refresh_token, base_64
 
 
 class Refresh:
