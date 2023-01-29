@@ -5,7 +5,7 @@ from selenium import webdriver
 from time import sleep
 from bs4 import BeautifulSoup
 import cred
-
+from spinitron.client import Spinitron
 
 class KEXPSpotify:
 
@@ -20,7 +20,6 @@ class KEXPSpotify:
         self.spotify = ""
         self.uri_list = []
         self.temp_track_list = []
-
 
     def spotify_authorization(self):
         # AUTHORIZE USING SPOTIPY
@@ -54,7 +53,6 @@ class KEXPSpotify:
 
     def get_wtmd_songs(self):
         # GET LIST OF SONGS FROM WTMD
-
         print("---GETTING WTMD SONGS---")
 
         wtmd_url = "https://wtmdradio.org/playlist/dynamic/RecentSongs.html"
@@ -85,6 +83,39 @@ class KEXPSpotify:
                 self.track_list.append(self.temp_track_list)
                 self.temp_track_list = []
 
+    def get_wknc_songs(self):
+        # GET LIST OF SONGS FROM WKNC
+        print("---GETTING WKNC SONGS---")
+
+        wknc_url = "https://spinitron.com/WKNC/"
+        opts = webdriver.FirefoxOptions()
+        opts.headless = True
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("general.useragent.override",
+                               "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+
+        driver = webdriver.Firefox(profile, executable_path="venv/bin/geckodriver", options=opts)
+
+        driver.get(wknc_url)
+
+        driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+
+        sleep(3)
+
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+
+        tr_list = soup.find_all("tr", {"class": "spin-item"})
+
+        for item in tr_list:
+            print(item.attrs)
+        #
+        # for tr in tr_list:
+        #     song_list.append([tr])
+        #
+        # song_list = song_list[1:]
+        # for item in song_list:
+        #     for item2 in item:
+        #         self.track_list.append(item2.text[21:])
 
     def search_spotify(self):
         # SEARCH SPOTIFY FOR SONGS
@@ -95,13 +126,12 @@ class KEXPSpotify:
                 print(f"---SEARCHING FOR {song}---")
                 print()
 
-                q = str(song)
+                q = song
                 results = self.spotify.search(q, limit=1, offset=0, market="US")
 
                 for item in results["tracks"]["items"]:
                     self.uri_list.append(item["uri"])
             self.add_to_playlist()
-
 
     def add_to_playlist(self):
         print("---ADDING SONGS TO PLAYLIST---")
