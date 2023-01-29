@@ -1,8 +1,5 @@
-venv
-shadow.py
-__pycache__
-temp.txt
-success.txt
-main.bat
-./playlist.json
-./success.json
+cred.py
+geckodriver.log
+.cache
+.gitignore
+.idea

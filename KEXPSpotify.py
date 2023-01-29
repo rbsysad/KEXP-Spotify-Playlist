@@ -1,6 +1,9 @@
 import requests
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from selenium import webdriver
+from time import sleep
+from bs4 import BeautifulSoup
 import cred
 
 
@@ -8,13 +11,16 @@ class KEXPSpotify:
 
     def __init__(self):
         self.user_id = cred.spotify_user_id
-        self.playlist_id = cred.playlist_id
+        self.kexp_playlist_id = cred.kexp_playlist_id
+        self.wtmd_playlist_id = cred.wtmd_playlist_id
         self.artist = ""
         self.track = ""
         self.track_list = []
         self.kexp_endpoint = "https://api.kexp.org/v1/play"
         self.spotify = ""
         self.uri_list = []
+        self.temp_track_list = []
+
 
     def spotify_authorization(self):
         # AUTHORIZE USING SPOTIPY
@@ -41,9 +47,7 @@ class KEXPSpotify:
                     self.artist = item['artist']['name']
                     self.track = item['track']['name']
 
-                    formatted_artist = self.artist
-                    formatted_track = self.track
-                    formatted_string = "track:{} artist:{}".format(formatted_track, formatted_artist)
+                    formatted_string = "track:{} artist:{}".format(self.track, self.artist)
                     self.track_list.append(formatted_string)
 
         print(self.track_list)
@@ -52,23 +56,54 @@ class KEXPSpotify:
         # GET LIST OF SONGS FROM WTMD
 
         print("---GETTING WTMD SONGS---")
-        response = requests.get
+
+        wtmd_url = "https://wtmdradio.org/playlist/dynamic/RecentSongs.html"
+        opts = webdriver.FirefoxOptions()
+        opts.headless = True
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("general.useragent.override",
+                               "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+
+        driver = webdriver.Firefox(profile, executable_path="venv/bin/geckodriver", options=opts)
+
+        driver.get(wtmd_url)
+
+        sleep(2)
+
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+
+        p_list = soup.find_all("p")
+        for p in p_list:
+            amazon_url = (p.find("a").attrs["href"])
+            song_string = amazon_url[104:]
+            song = song_string.split("+")
+            self.track = song[0]
+            self.artist = song[1]
+            formatted_string = "track:{} artist:{}".format(self.track, self.artist)
+            self.temp_track_list.append(formatted_string)
+            if len(self.temp_track_list) == 95:
+                self.track_list.append(self.temp_track_list)
+                self.temp_track_list = []
+
 
     def search_spotify(self):
         # SEARCH SPOTIFY FOR SONGS
         # RETURNS SPOTIFY URI
 
-        for song in self.track_list:
-            print(f"---SEARCHING FOR {song}---")
-            print()
+        for temp_track_list in self.track_list:
+            for song in temp_track_list:
+                print(f"---SEARCHING FOR {song}---")
+                print()
 
-            q = str(song)
-            results = self.spotify.search(q, limit=1, offset=0, market="US")
+                q = str(song)
+                results = self.spotify.search(q, limit=1, offset=0, market="US")
 
-            for item in results["tracks"]["items"]:
-                self.uri_list.append(item["uri"])
+                for item in results["tracks"]["items"]:
+                    self.uri_list.append(item["uri"])
+            self.add_to_playlist()
+
 
     def add_to_playlist(self):
         print("---ADDING SONGS TO PLAYLIST---")
-        self.spotify.playlist_add_items(self.playlist_id, self.uri_list, position=None)
-
+        self.spotify.playlist_add_items(self.wtmd_playlist_id, self.uri_list, position=None)
+        self.uri_list = []
